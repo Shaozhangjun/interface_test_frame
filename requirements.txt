@@ -18,7 +18,7 @@ openpyxl==2.6.0
 psycopg2==2.8.4
 pymssql==2.1.4
 pytz==2019.3
-requests==2.18.4
+requests==2.20.0
 six==1.14.0
 tornado==6.0.3
 urllib3==1.22
