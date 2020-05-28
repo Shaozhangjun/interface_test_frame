@@ -1,0 +1,100 @@
+脚本功能介绍：
+    本脚本是基于python语言实现，支持使用excel存储测试用例，通过读取配置文件，执行脚本，进行接口测试。
+
+
+执行：
+   start.py 中调度dispatch函数开始执行，dispatch函数接收三个参数：case路径，load_type，case_suites。 load_type：int类型参数，load_type=0：执行指定的文件，此时，配置文件CasePath 填写的为文件的绝对路径，若不需要执行全部的excel文件，传入case_suites，case_suites为数组类型的参数，元素为此sheet页的名称，不传则执行全部文件。当load_type=1，配置文件的CasePath填写的为文件夹的绝对路径，此时会执行文件夹下所有的Excel文件
+
+
+命令行执行：
+    Options:
+    -t, --testcase PATH 测试用例文件，或者一个目录（执行该目录下所有用例文件） [required]
+    -l, --load_type load_type int类型参数，0：执行指定的文件，此时，配置文件CasePath 填写的为文件的绝对路径，若不需要执行全部的excel文件，传入case_suites，case_suites为数组类型的参数，元素为此sheet页的名称，不传则执行全部文件。当load_type=1，配置文件的CasePath填写的为文件夹的绝对路径，此时会执行文件夹下所有的Excel文件
+
+    例：python start_shell.py --t D:\workspace\case\Platform\Omiga3.0 -l 1
+
+
+
+固定测试报告模板：
+    config:
+        EXCEL文件中存在sheet页名称为config，会从此sheet页面读取测试的配置项
+        测试域名		 xxx
+        项目名称		 xxx
+        测试版本		 V1.0.0
+        测试人员		 xxx
+        超时时间设置	 5
+        token	{url":"xxx","headers":{"Content-Type": "application/x-www-form-urlencoded"},"data":"xxx"}
+
+        EMAIL	{"on_off": "on", "smtpserver": "smtp.163.com", "user": "xxx@163.com", "password": "xxxx", "receiver": "xxx@163.com", "subject": "接口自动化测试报告"}
+        PG_DATABASE		{"HOST": "xxx", "PORT": "5432", "USER": "username", "PASSWORD": "password", "DATABASE": "databaseName"}
+        ORACLE_DATABASE	{"HOST": "xxx", "PORT": "1521", "USER": "username", "PASSWORD": "password", "DATABASE": "databaseName"}
+        SQLSERVER_DATABASE	{"HOST": "xxx", "PORT": "1433", "USER": "username", "PASSWORD": "password", "DATABASE": "databaseName"}
+
+
+    case:
+        用例编号: 必须为数字，在处理参数和校验值时可能会使用
+        接口名称:
+        是否执行: YES	YES表示执行，NO表示不执行
+        请求方式: get, post, put, delete
+        接口地址:
+        请求头文件:
+        请求参数:
+        请求Body数据:
+        请求前操作:
+        预期接口状态: 必须为数字，填写接口的http请求状态：
+        校验前操作:
+        校验项:
+        校验后操作:
+        待用数据:
+
+
+参数依赖格式说明：
+    待用数据不为空表示保存respones的数据，具体要保存哪个数据就写返回值的路径，用 . 表示。例如：emplName=data.emplName
+    也可以执行sql{}，从数据库中取值。若有sql{}。例如：emplName=$sql{select xxx from xxxx}
+    每一个依赖变量需要换行，若换行必须以 ; 结尾
+
+
+请求的参数：params/body / 请求前/校验前/校验后操作：
+
+    关键字前需要加上$标识符
+
+    var{}：表示依赖参数
+        $var{xxx}    ——  依赖变量xxx
+        仅支持在当前sheet页查找依赖的变量
+
+    sql{}：表示要操作数据库
+         $sql{xxx;} —— 操作数据库
+         {}中填写具体的sql语句
+         默认从PG数据库中获取数据，如果要从sqlserver数据库获取，请标明mssql{}，如果要从oracle数据库获取数据，请标明orasql{}
+
+    func{}：表示要获取公共函数
+         $func{xxx} —— 执行公共函数
+         目前支持的公共函数如下：
+                 $func{rd_str(str_len)}:  获取长度为str_len的随机字符串
+                 $func{rd_int(min, max)}:  获取从min到max之间的随机整数
+                 $func{timestamp()}:  获取当前时间戳
+                 $func{td_timestamp()}:  获取当天时间戳
+                 $func{tm_timestamp()}:  获取明天日期的时间戳
+                 $func{utc_time()}:  获取UTC时间格式的时间戳
+                 $func{str_time()}:  获取格式为年月日时分秒的时间戳
+                 $func{date()}:  获取当前日期
+                 $func{int(str_id)}:  四舍五入获取整数
+                 $func{substr(str)}:  从头开始随机截取字符串
+
+    refile{}：表示读取文件的内容，括号内填写文件的名称，依赖文件需要放在与case同级的replaceFile文件夹下，此时会获取文件中的内容。
+           如$refile{testvarcenter.json}
+
+    upfile{}：表示要上传文件。括号内填写文件的名称，文件需要放在与case同级的uploadFile文件夹下，此时会将整个文件请求接口。
+           如$upfile{test.xlsx}
+
+    sleep{}：表示间隔几秒， 如$sleep{1}。
+
+
+检验项的参数：
+     $code != 0;
+     $data.taskId == $sql{select task_id from task_dev.tasks where id = $var{id};};
+     $data.taskName == $var{taskName};
+     $(1) == $sql{select count(*) from task_dev.client;}
+     每个校验值都要用$xxx的格式
+     每一个校验值都必须另起一行，换行需以 ; 结尾
+     目前支持的校验方式为：== ，!= ，>，<，>=，<=，len_>，len_<，len_==，len_>=，len_<=
