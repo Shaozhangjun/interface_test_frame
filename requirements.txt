@@ -1,5 +1,5 @@
 amqp==2.5.2
-Babel==2.8.0
+Babel==2.9.1
 billiard==3.6.1.0
 celery==4.4.0
 certifi==2019.11.28
